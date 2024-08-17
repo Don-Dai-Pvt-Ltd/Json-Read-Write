@@ -1,0 +1,191 @@
+﻿@{
+    ViewData["Title"] = "Enter Json Data";
+}
+<div class="d-flex flex-row justify-content-between">
+    <h1>@ViewData["Title"]</h1>
+    <div class="align-content-center">
+        <button type="button" onclick="addNested()" class="btn btn-dark btn-sm me-1">Add Nested</button>
+        <button type="button" onclick="addNext()" class="btn btn-info btn-sm me-1">Add Next</button>
+        <button type="button" onclick="addArray()" class="btn btn-secondary btn-sm me-1">Add Array</button>
+    </div>
+</div>
+
+<form asp-action="Privacy" method="post" onsubmit="populateJsonData()">
+    <input type="hidden" name="jsonData" id="jsonDataInput" />
+    <div id="inputContainer" class="mt-2"></div>
+    <div class="d-grid gap-2 col-1 mx-auto">
+        <button class="btn btn-outline-success btn-sm" type="submit">Save</button>
+    </div>
+</form>
+
+
+@section Scripts {
+    <script>
+        var container = document.getElementById("inputContainer");
+        var jsonData = {};
+        var inputIndex = 0;
+        var nestedIndex = 0;
+        var arrayIndex = 0;
+
+        function addNext() {
+            var newDiv = document.createElement('div');
+            newDiv.className = 'inputPair input-group mb-2';
+
+            var keyInput = document.createElement('input');
+            keyInput.type = 'text';
+            keyInput.placeholder = 'Key';
+            keyInput.className = "form-control rounded me-2";
+
+            var valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.placeholder = 'Value';
+            valueInput.className = "form-control rounded";
+
+            newDiv.appendChild(keyInput);
+            newDiv.appendChild(valueInput);
+
+            container.appendChild(newDiv);
+
+            jsonData[inputIndex] = { key: keyInput, value: valueInput };
+
+            inputIndex++;
+        }
+
+        function addNested() {
+            var newDiv = document.createElement('div');
+            newDiv.className = 'nestedInput mb-2';
+            newDiv.id = 'nested-' + nestedIndex;
+
+            var keyInput = document.createElement('input');
+            keyInput.type = 'text';
+            keyInput.placeholder = 'Key';
+            keyInput.className = "form-control rounded me-2";
+
+            var addNestedButton = document.createElement('button');
+            addNestedButton.type = 'button';
+            addNestedButton.className = 'btn btn-secondary btn-sm';
+            addNestedButton.innerText = 'Add Nested';
+            addNestedButton.onclick = function () {
+                addNestedTo(keyInput.value, newDiv.id);
+            };
+
+            newDiv.appendChild(keyInput);
+            newDiv.appendChild(addNestedButton);
+
+            container.appendChild(newDiv);
+
+            nestedIndex++;
+        }
+
+        function addNestedTo(parentKey, parentDivId) {
+            var nestedContainer = document.createElement('div');
+            nestedContainer.className = 'nestedContainer ms-3';
+            nestedContainer.id = 'nested-' + nestedIndex;
+
+            var keyInput = document.createElement('input');
+            keyInput.type = 'text';
+            keyInput.placeholder = 'Nested Key';
+            keyInput.className = "form-control rounded me-2";
+
+            var valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.placeholder = 'Nested Value';
+            valueInput.className = "form-control rounded";
+
+            nestedContainer.appendChild(keyInput);
+            nestedContainer.appendChild(valueInput);
+
+            var parentDiv = document.getElementById(parentDivId);
+            if (parentDiv) {
+                parentDiv.appendChild(nestedContainer);
+            }
+
+            if (!jsonData[parentKey]) {
+                jsonData[parentKey] = {};
+            }
+            jsonData[parentKey][keyInput.value] = valueInput.value;
+
+            nestedIndex++;
+        }
+
+        function addArray() {
+            var newDiv = document.createElement('div');
+            newDiv.className = 'arrayInput mb-2';
+            newDiv.id = 'array-' + arrayIndex;
+
+            var keyInput = document.createElement('input');
+            keyInput.type = 'text';
+            keyInput.placeholder = 'Array Key';
+            keyInput.className = "form-control rounded me-2";
+
+            var addArrayButton = document.createElement('button');
+            addArrayButton.type = 'button';
+            addArrayButton.className = 'btn btn-secondary btn-sm';
+            addArrayButton.innerText = 'Add Array Item';
+            addArrayButton.onclick = function () {
+                addArrayTo(keyInput.value, newDiv.id);
+            };
+
+            newDiv.appendChild(keyInput);
+            newDiv.appendChild(addArrayButton);
+
+            container.appendChild(newDiv);
+
+            arrayIndex++;
+        }
+
+        function addArrayTo(arrayKey, arrayDivId) {
+            var arrayItemDiv = document.createElement('div');
+            arrayItemDiv.className = 'arrayItem ms-3';
+
+            var valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.placeholder = 'Array Value';
+            valueInput.className = "form-control rounded";
+
+            arrayItemDiv.appendChild(valueInput);
+
+            var parentDiv = document.getElementById(arrayDivId);
+            if (parentDiv) {
+                parentDiv.appendChild(arrayItemDiv);
+            }
+
+            if (!jsonData[arrayKey]) {
+                jsonData[arrayKey] = [];
+            }
+            jsonData[arrayKey].push(valueInput.value);
+        }
+
+        function populateJsonData() {
+            jsonData = {};
+
+            container.querySelectorAll('.inputPair').forEach(pair => {
+                let key = pair.querySelector('input').value;
+                let value = pair.querySelector('input:nth-of-type(2)').value;
+                jsonData[key] = value;
+            });
+
+            container.querySelectorAll('.nestedInput').forEach(nested => {
+                let parentKey = nested.querySelector('input').value;
+                jsonData[parentKey] = {};
+                nested.querySelectorAll('.nestedContainer').forEach(container => {
+                    let nestedKey = container.querySelector('input:nth-of-type(1)').value;
+                    let nestedValue = container.querySelector('input:nth-of-type(2)').value;
+                    jsonData[parentKey][nestedKey] = nestedValue;
+                });
+            });
+
+            container.querySelectorAll('.arrayInput').forEach(array => {
+                let arrayKey = array.querySelector('input').value;
+                jsonData[arrayKey] = [];
+                array.querySelectorAll('.arrayItem').forEach(item => {
+                    let value = item.querySelector('input').value;
+                    jsonData[arrayKey].push(value);
+                });
+            });
+
+            var jsonString = JSON.stringify(jsonData, null, 4);
+            document.getElementById('jsonDataInput').value = jsonString;
+        }
+    </script>
+}

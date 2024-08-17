@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Privacy";
+    var jsonData = ViewData["JsonData"];
+}
+
+<h1 class="mb-4">@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrEmpty(jsonData?.ToString()))
+{
+    <pre id="jsonDisplay" class="json-display"></pre>
+}
+else
+{
+    <div class="alert alert-info" role="alert">
+        No JSON data available.
+    </div>
+}
+
+@section Scripts {
+    <script>
+        var jsonData = @Html.Raw(jsonData.ToString());
+
+        document.getElementById('jsonDisplay').textContent = JSON.stringify(jsonData, null, 4);
+    </script>
+}
